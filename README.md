@@ -20,6 +20,9 @@ Per una guida rapidissima su Git:
 
 - [GIT-Cheat-Sheet.md](Design/GIT-Cheat-Sheet.md)
 
+>[!IMPORTANT]
+> Prima di iniziare una nuova Fase del piano va sempre fatta una riunione per decidere i dettagli!
+
 # Credits
 
 Concept by Giorgio Presti, Alice May Tindiglia
