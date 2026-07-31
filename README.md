@@ -5,7 +5,7 @@ Software per l'estrazione di feature audio realtime e batch finalizzato a ricerc
 Attualmente in stato di Alpha, si vedano i seguenti file per il lavoro da svolgere
 
 - [Conventions.md](Design/Conventions.md)
-- [piano-implementazione-v4.md](Design/piano-implementazione-v4.md)
+- [piano-implementazione-v5.md](Design/piano-implementazione-v5.md)
 - [design-visualizzazione-v2.md](Design/design-visualizzazione-v2.md)
 - [UX-and-GUI-design.md](Design/UX-and-GUI-design.md)
 
