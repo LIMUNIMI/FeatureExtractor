@@ -146,7 +146,7 @@ livelli coerente. Log diagnostico e dati (CSV) restano canali separati.
 
 ## 11. Git: commit e versionamento
 
-Formato commit (vedi [GIT-Cheat-Sheet.md](GIT-Cheat-Sheet.html)):
+Formato commit (vedi [GIT-Cheat-Sheet.md](GIT-Cheat-Sheet.md)):
 ```
 <emoji> <tipo>: <descrizione breve, imperativo>
 ```
