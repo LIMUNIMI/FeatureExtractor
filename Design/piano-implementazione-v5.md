@@ -4,7 +4,7 @@
 > Questa analisi emerge dall'incrocio di miei appunti con una lettura del codice fatta da Claude. Commento alcune cose con tips come questo.
 
 > [!TIP]
-> Il documento è diviso in 3 parti: **Panoramica**, **Le Fasi**, **Note Finali**. La parte operativa è la seconda (Fasi) che consiste nel piano di implementazione, diviso in 16 fasi (0-14 + 1), ognuno con degli step atomici abbastanza semplici. Le Fasi 13 e 14 si possono fare in parallelo alle altre (ma dopo la 4 o la 5), e possono essere tesi a sé (per la 14 vedi [design-visualizzazione-v2.md](Design/design-visualizzazione-v2.md)). Anche la 6-bis si può fare un po' quando si vuole dopo la 6, ma non è abbastanza per una tesi.
+> Il documento è diviso in 3 parti: **Panoramica**, **Le Fasi**, **Note Finali**. La parte operativa è la seconda (Fasi) che consiste nel piano di implementazione, diviso in 16 fasi (0-14 + 1), ognuno con degli step atomici abbastanza semplici. Le Fasi 13 e 14 si possono fare in parallelo alle altre (ma dopo la 4 o la 5), e possono essere tesi a sé (per la 14 vedi [design-visualizzazione-v2.md](design-visualizzazione-v2.md)). Anche la 6-bis si può fare un po' quando si vuole dopo la 6, ma non è abbastanza per una tesi.
 >
 > Non tutto deve essere svolto in una sola tesi (4 fasi delle 16 proposte possono bastare, con una quinta come potenziale estensione se c'è tempo).
 >
@@ -14,7 +14,7 @@
 Non sono contro il vibe coding, ma è requisito FONDAMENTALE che tutto il codice generato venga letto e capito e ci si sappia mettere mano. Piccole richieste puntuali, non "fai questo step del piano".
 
 > [!TIP]
-Vedere il file [Conventions.md](Design/Conventions.md) per le convenzioni di programmazione da seguire.
+Vedere il file [Conventions.md](Conventions.md) per le convenzioni di programmazione da seguire.
 
 Documento di lavoro per l'evoluzione di `LIMUNIMI/FeatureExtractor`.
 Analisi condotta sul commit `2496b32`.
@@ -372,9 +372,9 @@ comportamento invariato, e un diff non vuoto è un bug introdotto.
 | 14 | Visualizzazione e taratura dei parametri | 10-15 gg | vista interattiva per tarare i parametri, esportazione di figure in qualità editoriale |
 
 > [!TIP]
-Non c'è indicata una vera e propria fase di design della GUI generale (liste, pannelli di configurazione, gestione file), per ora facciamo che a fine lavoro, ogni studente si accolla un piccolo miglioramento della GUI (almeno fino a che non abbiamo fissato un design, in tal caso fare riferimento al relativo documento di specifiche [UX-and-GUI-design.md](Design/UX-and-GUI-design.md)). La visualizzazione dei descrittori fa eccezione: ha un design dedicato, la Fase 14.
+Non c'è indicata una vera e propria fase di design della GUI generale (liste, pannelli di configurazione, gestione file), per ora facciamo che a fine lavoro, ogni studente si accolla un piccolo miglioramento della GUI (almeno fino a che non abbiamo fissato un design, in tal caso fare riferimento al relativo documento di specifiche [UX-and-GUI-design.md](UX-and-GUI-design.md)). La visualizzazione dei descrittori fa eccezione: ha un design dedicato, la Fase 14.
 >
-> Ad ogni modo, il punto da cui conviene iniziare a pensare al design generale della GUI (non necessariamente implementarlo) è la Fase 2: è la prima a introdurre superfici di interazione realmente nuove rispetto a oggi — pannello dei parametri generato dai descrittori, salvataggio e caricamento del setup, elenco dei setup recenti, indicazione di modifiche non salvate. Tutto ciò che segue eredita lo stesso linguaggio: la tabella di mapping (Fase 8), l'assegnazione feature→banda (Fase 11), il pannello di esportazione del paragrafo metodologico (Fase 13). Deciso bene una volta in Fase 2, si eredita; deciso fase per fase, il rischio è ritrovarsi con convenzioni diverse per lo stesso tipo di widget. Due cose da tenere a mente per il [documento di design](Design/UX-and-GUI-design.md): la Fase 8 (tabella di mapping) è complessa abbastanza da poter meritare un mini-documento dedicato sullo stesso modello della Fase 14; la Fase 9 (plugin) impone di fattorizzare il pannello live in un componente condiviso fra applicazione e plugin, un vincolo strutturale utile da conoscere già in Fase 2 anche se si applica solo dopo.
+> Ad ogni modo, il punto da cui conviene iniziare a pensare al design generale della GUI (non necessariamente implementarlo) è la Fase 2: è la prima a introdurre superfici di interazione realmente nuove rispetto a oggi — pannello dei parametri generato dai descrittori, salvataggio e caricamento del setup, elenco dei setup recenti, indicazione di modifiche non salvate. Tutto ciò che segue eredita lo stesso linguaggio: la tabella di mapping (Fase 8), l'assegnazione feature→banda (Fase 11), il pannello di esportazione del paragrafo metodologico (Fase 13). Deciso bene una volta in Fase 2, si eredita; deciso fase per fase, il rischio è ritrovarsi con convenzioni diverse per lo stesso tipo di widget. Due cose da tenere a mente per il [documento di design](UX-and-GUI-design.md): la Fase 8 (tabella di mapping) è complessa abbastanza da poter meritare un mini-documento dedicato sullo stesso modello della Fase 14; la Fase 9 (plugin) impone di fattorizzare il pannello live in un componente condiviso fra applicazione e plugin, un vincolo strutturale utile da conoscere già in Fase 2 anche se si applica solo dopo.
 
 ---
 
