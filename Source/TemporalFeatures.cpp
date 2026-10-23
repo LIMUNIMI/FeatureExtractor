@@ -17,6 +17,9 @@ void RRMS::releaseResources()
 
 void RRMS::processBlock(AudioBuffer<float>& buffer)
 {
+    jassert(windowSize > 0 && "RRMS::processBlock chiamato senza prepareToPlay()");
+    if (windowSize == 0) return;
+
     const auto numSamples = buffer.getNumSamples();
     const auto numCh = buffer.getNumChannels();
 
@@ -32,6 +35,7 @@ void RRMS::processBlock(AudioBuffer<float>& buffer)
     auto auxData = aux.getWritePointer(0);
     auto historyData = history.getWritePointer(0);
 
+    double sumRms = 0.;
     for (int smp = 0; smp < numSamples; ++smp) {
         float squareSample = auxData[smp] * auxData[smp];
 
@@ -41,11 +45,12 @@ void RRMS::processBlock(AudioBuffer<float>& buffer)
         if (avg < 0.0f) { avg = 0.0f; }
 
         auxData[smp] = std::sqrt(avg / static_cast<float>(windowSize));
+        sumRms += auxData[smp];
 
         ++historyIndex %= windowSize;
     }
 
-    rmsValue = aux.getSample(0, numSamples - 1);
+    rmsValue = static_cast<float>(sumRms / numSamples);
 }
 
 void RRMS::reset()
@@ -81,9 +86,8 @@ void PAN::processBlock(AudioBuffer<float>& buffer)
     rEnergy /= numSamples;
 
     const float totalEnergy = lEnergy + rEnergy;
-    constexpr float silenceThreshold = 1e-3f;
 
-    if (totalEnergy < silenceThreshold) {
+    if (totalEnergy < SILENCE_THRESH_SOFT) {
         panValue = 0.0f;
     }
     else {
@@ -141,9 +145,8 @@ void Brightness::processBlock(AudioBuffer<float>& buffer)
     float fEnvVal = fEnvData.values.empty() ? 0.0f : fEnvData.values[0];
 
     float b = 0.0f;
-    constexpr float silenceThreshold = 1e-3f;
 
-    if (envVal < silenceThreshold) {
+    if (envVal < SILENCE_THRESH_SOFT) {
         b = 0.0f;
         lastSample = 0.0f; 
     }
@@ -152,5 +155,48 @@ void Brightness::processBlock(AudioBuffer<float>& buffer)
     }
 
     b = jlimit(0.0f, 2.0f, b);
-    brightValue = (sampleRate / MathConstants<float>::pi) * (asin(b / 2.0f));
+    brightValue = static_cast<float>((sampleRate / MathConstants<float>::pi) * (asin(b / 2.0f)));
+}
+
+void ZCR::processBlock(AudioBuffer<float>& buffer)
+{
+    const auto numSamples = buffer.getNumSamples();
+    const auto numCh = buffer.getNumChannels();
+
+    int crossCount = 0;
+
+    for (int i = 0; i < numSamples; ++i) {
+
+        float smp = 0.0f;
+
+        for (int ch = 0; ch < numCh; ++ch) {
+
+            smp += buffer.getSample(ch, i);
+
+        }
+
+        smp /= numCh;
+
+        if (smp > SILENCE_THRESH_HARD) {
+            
+            if (lastSign < 0) {
+                crossCount++;
+            }
+
+            lastSign = 1;
+        }
+
+        else if (smp < -SILENCE_THRESH_HARD) {
+            
+            if (lastSign > 0) {
+                crossCount++;
+            }
+
+            lastSign = -1;
+        
+        }
+
+    }
+
+    zcrValue = (float)crossCount / numSamples;
 }

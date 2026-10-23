@@ -7,8 +7,8 @@
 
 class MyFeatureExtractor : public ThreadWithProgressWindow {
 public:
-	MyFeatureExtractor();
-	~MyFeatureExtractor() {};
+	MyFeatureExtractor(AudioDeviceManager &audioDeviceManager);
+	~MyFeatureExtractor() override { stopThread(2000); };
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
@@ -75,7 +75,8 @@ private:
 	StringArray midiOutputNames;
 	MidiBuffer midiBuffer;
 	MidiMapper midiMapper;
-	AudioDeviceManager deviceManager; //gestione midi i/o
+
+	AudioDeviceManager& deviceManager; //gestione midi i/o
 
 	//osc
 	std::atomic<bool> oscEnabled = false;
@@ -96,7 +97,8 @@ private:
 	void run() override;
 
 	//msg sample rate
-	double sr;
+	double sr = 44100.;
+	int bufferSize = 512;
 	double updateRate = 50.0;
 	int sampleCount = 0;
 

@@ -10,7 +10,7 @@ public:
 
 	String getName() const override { return "RRMS"; }
 
-	void prepareToPlay(double sr, int samplesPerBlock) override;
+	void prepareToPlay(double, int) override;
 
 	void releaseResources() override;
 
@@ -33,9 +33,9 @@ private:
 	AudioBuffer<float> history;
 	int historyIndex = 0;
 	float maxTime;
-	double sampleRate;
+	double sampleRate = 44100.;
 	float rmsTime;
-	int windowSize;
+	int windowSize = 1543;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RRMS)
 };
@@ -48,7 +48,7 @@ public:
 
 	String getName() const override { return "PAN"; }
 
-	void prepareToPlay(double sr, int samplesPerBlock) override {};
+	void prepareToPlay(double, int) override {};
 
 	void releaseResources() override {};
 
@@ -93,9 +93,38 @@ public:
 private:
 	AudioBuffer<float> filterBuffer;
 	float brightValue = 0.0f;
-	double sampleRate;
+	double sampleRate = 44100.;
 	RRMS envelope, filterEnvelope;
-	float lastSample;
+	float lastSample = 0.0f;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Brightness)
+};
+
+class ZCR : public Feature {
+public:
+	ZCR() {}
+
+	~ZCR() {}
+
+	String getName() const override { return "ZCR"; }
+
+	void prepareToPlay(double, int) override { lastSign = 0; zcrValue = 0.0f; };
+
+	void releaseResources() override {};
+
+	void processBlock(AudioBuffer<float>& buffer) override;
+
+	void createResultPackage(FeatureResult& featPackage) override {
+		featPackage.add("ZCR", zcrValue);
+	}
+
+	void getResult(FeatureResult& featPackage) override {
+		createResultPackage(featPackage);
+	}
+
+private:
+	float zcrValue = 0.0f;
+	int lastSign = 0;
+
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ZCR)
 };

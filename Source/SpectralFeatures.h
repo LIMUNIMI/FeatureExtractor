@@ -7,6 +7,14 @@ public:
 	SpectralMoments() : SpectralFeature(10) {} ;
 	~SpectralMoments() {};
 
+	void prepareToPlay(double sr, int samplesPerBlock) override {
+		SpectralFeature::prepareToPlay(sr, samplesPerBlock);
+		centroid = 0.0f;
+		spread = 0.0f;
+		skewness = 0.0f;
+		kurtosis = 0.0f;
+	}
+
 	String getName() const override { return "Spectral Moments"; }
 
 	void getResult(FeatureResult& featPackage) override {
@@ -23,7 +31,10 @@ public:
 	void calculateSpectralFeatures(const std::vector<float>& magnitudes, int fftSize, int numBins) override;
 
 private:
-	float centroid, spread, skewness, kurtosis = 0.0f;
+	float centroid = 0.0f;
+	float spread = 0.0f;
+	float skewness = 0.0f;
+	float kurtosis = 0.0f;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralMoments)
 };
@@ -38,6 +49,8 @@ public:
 		mSampleRate = sampleRate;
 		mBlockSize = samplesPerBlock; 
 		setupAlgorithmParameters(); 
+		mCurrentPitchHz = 0.0f;
+		mCurrentStrength = 0.0f;
 	}
 
 	String getName() const override { return "Fundamental frequency"; }
@@ -121,7 +134,7 @@ public:
 	void calculateSpectralFeatures(const std::vector<float>& magnitudes, int fftSize, int numBins) override;
 
 private:
-	std::array<float, 12> chroma;
+	std::array<float, 12> chroma{};
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chromagram)
 };

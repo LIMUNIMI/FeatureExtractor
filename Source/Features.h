@@ -36,7 +36,7 @@ public:
 protected:
 	STFT stft;
 	AudioBuffer<float> aux;
-	double sampleRate;
+	double sampleRate = 44100.;
 
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralFeature)

@@ -85,4 +85,35 @@ private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(IQR)
 };
 
+class Max : public Functional {
+public:
+	Max() {};
+	~Max() {};
+
+	void store(const FeatureResult& res) override;
+	String getName() const override { return "Max"; }
+	void reset() override { maxes.clear(); savedNames.clear(); }
+	FeatureResult getResult() override;
+
+private:
+	std::vector<float> maxes;
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Max)
+};
+
+class Min : public Functional {
+public:
+	Min() {};
+	~Min() {};
+
+	void store(const FeatureResult& res) override;
+	String getName() const override { return "Min"; }
+	void reset() override { mins.clear(); savedNames.clear(); }
+	FeatureResult getResult() override;
+
+private:
+	std::vector<float> mins;
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Min)
+};
+
+
 

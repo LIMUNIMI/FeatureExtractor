@@ -2,9 +2,10 @@
 #include "TemporalFeatures.h"
 #include "SpectralFeatures.h"
 
-#define BATCH_BLOCK_SIZE 4096
+#define BATCH_BLOCK_SIZE 1024
 
-MyFeatureExtractor::MyFeatureExtractor() : audioPlayer(formatManager), ThreadWithProgressWindow("Processing files...", true, true) {
+MyFeatureExtractor::MyFeatureExtractor(AudioDeviceManager& audioDeviceManager) : 
+    audioPlayer(formatManager), ThreadWithProgressWindow("Processing files...", true, true), deviceManager(audioDeviceManager) {
 	csvPath = File::getSpecialLocation(File::userHomeDirectory).getFullPathName();
 
     audioPlayer.onProcessRequested = [this](std::vector<File> filesToProcess) {
@@ -42,16 +43,17 @@ bool MyFeatureExtractor::setMidiOutput(int index)
 }
 
 void MyFeatureExtractor::prepareLiveFeatures() {
-    auto setup = deviceManager.getAudioDeviceSetup();
+
     for (auto* f : activeFeatures) {
-        f->prepareToPlay(setup.sampleRate, setup.bufferSize);
+        f->prepareToPlay(sr, bufferSize);
     }
 }
 
 void MyFeatureExtractor::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 {
     sr = sampleRate;
-    sampleCount = sr / updateRate;
+    bufferSize = samplesPerBlockExpected;
+    sampleCount = static_cast<int>(sr / updateRate);
     audioPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
@@ -91,7 +93,7 @@ void MyFeatureExtractor::getNextAudioBlock(const AudioSourceChannelInfo& bufferT
                     }
                 }
 
-                sampleCount = sr / updateRate;
+                sampleCount = static_cast<int>(sr / updateRate);
             }
         }
         
@@ -112,8 +114,9 @@ void MyFeatureExtractor::processFile(std::vector<File> filesToProcess) {
 void MyFeatureExtractor::run() {
     auto startTime = Time::getMillisecondCounterHiRes();
     bool processCancelled = false;
+    bool outputFail = false;
 
-    String nomeCartella = filesToProcessRun[0].getParentDirectory().getFileName();
+
     File fileScrittura = File(csvPath).getChildFile(csvFileName + ".csv");
 
     if (fileScrittura.existsAsFile()) {
@@ -156,6 +159,7 @@ void MyFeatureExtractor::run() {
                     FeatureResult featPackage;
                     for (auto* f : activeFeatures) {
                         f->processBlock(buffer);
+                        f->getResult(featPackage);
                     }
 
                     for (auto* func : activeFunctionals) {
@@ -179,10 +183,21 @@ void MyFeatureExtractor::run() {
         }
         outputStream->flush();
     }
+
+    else { outputFail = true; }
+
     auto stopTime = Time::getMillisecondCounterHiRes();
     auto totalTimeSeconds = (stopTime - startTime) / 1000.0f;
 
-    if (processCancelled) {
+    if (outputFail) {
+        MessageManager::callAsync([this] {
+            if (onStateChanged) onStateChanged();
+            String message;
+            message << "Could not create the CSV file";
+            NativeMessageBox::showMessageBoxAsync(AlertWindow::WarningIcon, "Error", message);
+            });
+    }
+    else if (processCancelled) {
         MessageManager::callAsync([this] {
             if (onStateChanged) onStateChanged();
             String message;

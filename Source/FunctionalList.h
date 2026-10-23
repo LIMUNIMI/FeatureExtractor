@@ -10,6 +10,8 @@ public:
         functionals.add(new Median());
         functionals.add(new StdDev());
         functionals.add(new IQR());
+        functionals.add(new Max());
+        functionals.add(new Min());
 
         addAndMakeVisible(&functionalsGroup);
         functionalsGroup.setText("Functionals");

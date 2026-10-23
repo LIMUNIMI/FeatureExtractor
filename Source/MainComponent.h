@@ -28,7 +28,6 @@ private:
     SectionPanel outputPanel{ "Output",   juce::Colour::fromString("#FF42C800") };
 
     ModernLookAndFeel customLF;
-    MyFeatureExtractor extractor;
 
     CircleIconButton settingsBtn{ "Settings", BinaryData::settings_svg, BinaryData::settings_svgSize };
     CircleIconButton monitorBtn{ "Monitor", BinaryData::headphones_svg, BinaryData::headphones_svgSize };
@@ -44,6 +43,7 @@ private:
     Label csvLabel;
     FuncList funcList;
     FeatList featList;
+    MyFeatureExtractor extractor{ deviceManager };
     TextEditor csvNameEditor;
     Label csvSelectFolderLabel;
     Label csvNameLabel;

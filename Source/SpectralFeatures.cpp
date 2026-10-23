@@ -17,7 +17,7 @@ void SpectralMoments::calculateSpectralFeatures(const std::vector<float>& magnit
         weightedSum += magnitude * freq;
     }
 
-    if (sumMag > 1e-3f) 
+    if (sumMag > SILENCE_THRESH_SOFT) 
     {
         centroid = weightedSum / sumMag;
 
@@ -36,8 +36,8 @@ void SpectralMoments::calculateSpectralFeatures(const std::vector<float>& magnit
         }
 
         spread = std::sqrt(sumSquaredDiffs / sumMag);
-        skewness = (sumCubedDiffs / sumMag) / std::pow(spread, 3.0);
-        kurtosis = (sumFourthDiffs / sumMag) / std::pow(spread, 4.0);
+        skewness = static_cast<float>((sumCubedDiffs / sumMag) / std::pow(spread, 3.0));
+        kurtosis = static_cast<float>((sumFourthDiffs / sumMag) / std::pow(spread, 4.0));
     }
     else
     {
@@ -326,7 +326,7 @@ void Chromagram::calculateSpectralFeatures(const std::vector<float>& magnitudes,
     float totalEnergy = 0.0f;
     for (float v : chroma) totalEnergy += v;
 
-    if (totalEnergy > 1e-6f) {
+    if (totalEnergy > (SILENCE_THRESH_HARD)) {
         for (float& v : chroma) v /= totalEnergy;
     }
 }

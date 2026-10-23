@@ -1,5 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
+constexpr float SILENCE_THRESH_HARD = 1e-6f;
+constexpr float SILENCE_THRESH_SOFT = 1e-3f;
 
 
 //TODO: importanza ordine lettura featureResult

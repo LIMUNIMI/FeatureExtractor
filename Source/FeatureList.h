@@ -11,6 +11,7 @@ public:
         features.add(new RRMS());
         features.add(new PAN());
         features.add(new Brightness());
+        features.add(new ZCR());
         features.add(new SpectralMoments());
         features.add(new Chromagram());
         features.add(new F0());
