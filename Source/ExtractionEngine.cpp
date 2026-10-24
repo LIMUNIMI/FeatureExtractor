@@ -1,6 +1,8 @@
 #include "ExtractionEngine.h"
 #include "TemporalFeatures.h"
 #include "SpectralFeatures.h"
+#include "CsvAggregateSink.h"
+
 
 #define BATCH_BLOCK_SIZE 1024
 
@@ -112,34 +114,22 @@ void MyFeatureExtractor::processFile(std::vector<File> filesToProcess) {
 void MyFeatureExtractor::run() {
     auto startTime = Time::getMillisecondCounterHiRes();
     bool processCancelled = false;
-    bool outputFail = false;
 
+    CsvAggregateSink sink(File(csvPath).getChildFile(csvFileName + ".csv"), activeFunctionals);
 
-    File fileScrittura = File(csvPath).getChildFile(csvFileName + ".csv");
+    bool outputFail = sink.isNull();
 
-    if (fileScrittura.existsAsFile()) {
-        fileScrittura.deleteFile();
-    }
+    if (!outputFail) {
 
-    if (auto outputStream = std::unique_ptr<FileOutputStream>(fileScrittura.createOutputStream())) {
-
-        FeatureResult featPackage;
+        StringArray schema;
         for (auto* f : activeFeatures) {
-            featPackage.names.addArray(f->outputNames());
+            schema.addArray(f->outputNames());
         }
-        int numCol = featPackage.names.size();
-        featPackage.values.resize(numCol);
+        int numCol = schema.size();
 
-        String header = "File_Name";
-        for (auto* func : activeFunctionals) {
-            for (auto* f : activeFeatures) {
-                for (const auto& name : f->outputNames()) {
-                    header << ";" << name << "_" << func->getName();
-                }
-            }
-        }
+        sink.begin(schema);
+        std::vector<float> frame(numCol);
 
-        outputStream->writeText(header + "\n", false, false, nullptr);
         int progressCount = 0;
         for (const auto& file : filesToProcessRun) {
 
@@ -148,9 +138,8 @@ void MyFeatureExtractor::run() {
                 for (auto* f : activeFeatures) {
                     f->prepareToPlay(reader->sampleRate, BATCH_BLOCK_SIZE);
                 }
-                for (auto* func : activeFunctionals) {
-                    func->reset();
-                }
+                
+                sink.onFileBegin(file.getFileName());
 
                 AudioBuffer<float> buffer(reader->numChannels, BATCH_BLOCK_SIZE);
                 int64 startSample = 0;
@@ -164,33 +153,21 @@ void MyFeatureExtractor::run() {
                     for (auto* f : activeFeatures) {
                         f->processBlock(buffer);
                         for (float val : f->values()) {
-                            featPackage.values[i++] = val;
+                            frame[i++] = val;
                         }
                     }
+                    sink.onFrame(frame.data(), numCol);
 
-                    for (auto* func : activeFunctionals) {
-                        func->store(featPackage);
-                    }
                     startSample += BATCH_BLOCK_SIZE;
                 }
 
-                String riga = file.getFileName();
-
-                for (auto* func : activeFunctionals) {
-                    auto res = func->getResult();
-                    for (int n = 0; n < numCol; n++) {
-                        riga << ";";
-                        if (n < res.values.size()) {
-                            riga << String(res.values[n], 4).replace(".", ",");
-                        }
-                    }
-                }
-                outputStream->writeText(riga + "\n", false, false, nullptr);
+                sink.onFileEnd(file.getFileName());
             }
             setProgress(progressCount / (double)filesToProcessRun.size());
             progressCount++;
         }
-        outputStream->flush();
+
+        sink.end();
     }
 
     else { outputFail = true; }

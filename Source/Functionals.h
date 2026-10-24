@@ -7,13 +7,14 @@ public:
 	Functional() {}
 	virtual ~Functional() = default;
 
-	virtual void store(const FeatureResult& res) = 0;
+	virtual void store(const float* values, int numValues) = 0;
 	virtual String getName() const = 0;
-	virtual void reset() = 0;
-	virtual FeatureResult getResult()  = 0;
+	virtual void reset(int numValues) { n = numValues; onReset(); };
+	virtual std::vector<float> getResult()  = 0;
 
 protected:
-	StringArray savedNames;
+	virtual void onReset() = 0;
+	int n = 0;
 private:
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Functional)
@@ -24,12 +25,12 @@ public:
 	Average() {};
 	~Average() {};
 
-	void store(const FeatureResult& res) override;
+	void store(const float* values, int numValues) override;
 	String getName() const override { return "Average"; }
-	void reset() override { sums.clear(); count = 0; savedNames.clear(); }
-	FeatureResult getResult() override;
-	//Functional* clone() const override { return new Average(); }
+	std::vector<float> getResult() override;
 
+protected:
+	void onReset() override { count = 0; sums.assign(n, 0.0);};
 private:
 	std::vector<double> sums;
 	int count = 0;
@@ -41,14 +42,15 @@ public:
 	Median() {};
 	~Median() {};
 
-	void store(const FeatureResult& res) override;
+	void store(const float* values, int numValues) override;
 	String getName() const override { return "Median"; }
-	void reset() override { values.clear(); savedNames.clear(); }
-	FeatureResult getResult() override;
-	//Functional* clone() const override { return new Median(); }
+	std::vector<float> getResult() override;
+
+protected:
+	void onReset() override { samples.clear(); samples.resize(n); };
 
 private:
-	std::vector <std::vector<float>> values;
+	std::vector <std::vector<float>> samples;
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Median)
 };
 
@@ -57,11 +59,12 @@ public:
 	StdDev() {};
 	~StdDev() {};
 
-	void store(const FeatureResult& res) override;
+	void store(const float* values, int numValues) override;
 	String getName() const override { return "Standard deviation"; }
-	void reset() override { sums.clear(); sumSquares.clear(); count = 0; savedNames.clear(); }
-	FeatureResult getResult() override;
-	//Functional* clone() const override { return new StdDev(); }
+	std::vector<float> getResult() override;
+
+protected:
+	void onReset() override { sums.assign(n, 0.0); sumSquares.assign(n, 0.0); count = 0; };
 
 private:
 	int count = 0;
@@ -74,14 +77,15 @@ public:
 	IQR() {};
 	~IQR() {};
 
-	void store(const FeatureResult& res) override;
+	void store(const float* values, int numValues) override;
 	String getName() const override { return "IQR"; }
-	void reset() override { values.clear(); savedNames.clear(); }
-	FeatureResult getResult() override;
-	//Functional* clone() const override { return new IQR(); }
+	std::vector<float> getResult() override;
+
+protected:
+	void onReset() override { samples.clear(); samples.resize(n); };
 
 private:
-	std::vector <std::vector<float>> values;
+	std::vector <std::vector<float>> samples;
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(IQR)
 };
 
@@ -90,10 +94,12 @@ public:
 	Max() {};
 	~Max() {};
 
-	void store(const FeatureResult& res) override;
+	void store(const float* values, int numValues) override;
 	String getName() const override { return "Max"; }
-	void reset() override { maxes.clear(); savedNames.clear(); }
-	FeatureResult getResult() override;
+	std::vector<float> getResult() override;
+
+protected:
+	void onReset() override { maxes.assign(n, std::numeric_limits<float>::lowest()); };
 
 private:
 	std::vector<float> maxes;
@@ -105,10 +111,12 @@ public:
 	Min() {};
 	~Min() {};
 
-	void store(const FeatureResult& res) override;
+	void store(const float* values, int numValues) override;
 	String getName() const override { return "Min"; }
-	void reset() override { mins.clear(); savedNames.clear(); }
-	FeatureResult getResult() override;
+	std::vector<float> getResult() override;
+
+protected:
+	void onReset() override { mins.assign(n, std::numeric_limits<float>::max()); };
 
 private:
 	std::vector<float> mins;

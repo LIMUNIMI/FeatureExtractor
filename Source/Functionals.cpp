@@ -1,59 +1,48 @@
 #include "Functionals.h"
 #include <algorithm>
 
-void Average::store(const FeatureResult& res) {
+void Average::store(const float* values, int numValues) {
     
-    if (res.values.empty()) return;
+    if (numValues == 0) return;
 
-    if (sums.empty()) {
-        sums.resize(res.values.size(), 0.0);
-        savedNames = res.names;
-    }
+    if (values[0] <= SILENCE_THRESH_SOFT) return;
 
-    if (res.values[0] <= SILENCE_THRESH_SOFT) return;
-
-    for (int i = 0; i < res.values.size(); ++i) {
-        sums[i] += (double)(res.values[i]);
+    for (int i = 0; i < numValues; ++i) {
+        sums[i] += static_cast<double>(values[i]);
     }
 
     ++count;
 }
 
-FeatureResult Average::getResult()  {
-    FeatureResult res;
+std::vector<float> Average::getResult()  {
+    std::vector<float> res;
     if (count == 0 || sums.empty())
         return res;
 
-    for (int i = 0; i < sums.size(); ++i) {
-        float finalAverage = (float)(sums[i] / count);
+    for (int i = 0; i < n; ++i) {
 
-        String label = savedNames[i];
-        res.add(label, finalAverage);
+        res.push_back(static_cast<float>(sums[i] / count));
     }
 
     return res;
 }
 
-void Median::store(const FeatureResult& res)
+void Median::store(const float* values, int numValues)
 {
-    if (res.values.empty()) return;
+    if (numValues == 0) return;
 
-    if (values.empty()) {
-        values.resize(res.values.size());
-        savedNames = res.names;
-    }
 
-    for (int i = 0; i < res.values.size(); ++i) {
-        values[i].push_back(res.values[i]);
+    for (int i = 0; i < numValues; ++i) {
+        samples[i].push_back(values[i]);
     }
 }
 
-FeatureResult Median::getResult() {
-    FeatureResult res;
-    if (values.empty() || values[0].empty()) return res;
+std::vector<float> Median::getResult() {
+    std::vector<float> res;
+    if (samples.empty() || samples[0].empty()) return res;
 
-    for (int i = 0; i < values.size(); ++i) {
-        auto& v = values[i];
+    for (int i = 0; i < n; ++i) {
+        auto& v = samples[i];
         int n = static_cast<int>(v.size() / 2);
         std::nth_element(v.begin(), v.begin() + n, v.end());
         float medianVal = v[n];
@@ -62,58 +51,50 @@ FeatureResult Median::getResult() {
             float low = *std::max_element(v.begin(), v.begin() + n);
             medianVal = (low + medianVal) / 2.f;
         }
-        res.add(savedNames[i], medianVal);
+        res.push_back(medianVal);
     }
     return res;
 }
 
-void StdDev::store(const FeatureResult& res) {
-    if (sums.empty()) {
-        sums.resize(res.values.size(), 0.0);
-        sumSquares.resize(res.values.size(), 0.0);
-        savedNames = res.names;
-    }
-    for (int i = 0; i < res.values.size(); ++i) {
-        double val = static_cast<double>(res.values[i]);
+void StdDev::store(const float* values, int numValues) {
+
+    if (numValues == 0) return;
+
+    for (int i = 0; i < numValues; ++i) {
+        double val = static_cast<double>(values[i]);
         sums[i] += val;
         sumSquares[i] += (val * val);
     }
     ++count;
 }
 
-FeatureResult StdDev::getResult() {
-    FeatureResult res;
+std::vector<float> StdDev::getResult() {
+    std::vector<float> res;
     if (count < 2) return res;
 
-    for (int i = 0; i < sums.size(); ++i) {
+    for (int i = 0; i < n; ++i) {
         double mean = sums[i] / count;
-        
         double variance = (sumSquares[i] / count) - (mean * mean);
-        res.add(savedNames[i], static_cast<float>(std::sqrt(std::max(0.0, variance))));
+        res.push_back(static_cast<float>(std::sqrt(std::max(0.0, variance))));
     }
     return res;
 }
 
-void IQR::store(const FeatureResult& res) {
+void IQR::store(const float* values, int numValues) {
 
-    if (res.values.empty()) return;
+    if (numValues == 0) return;
 
-    if (values.empty()) {
-        values.resize(res.values.size());
-        savedNames = res.names;
-    }
-
-    for (int i = 0; i < res.values.size(); ++i) {
-        values[i].push_back(res.values[i]);
+    for (int i = 0; i < numValues; ++i) {
+        samples[i].push_back(values[i]);
     }
 }
 
-FeatureResult IQR::getResult() {
-    FeatureResult res;
-    if (values.empty() || values[0].empty()) return res;
+std::vector<float> IQR::getResult() {
+    std::vector<float> res;
+    if (samples.empty() || samples[0].empty()) return res;
 
-    for (int i = 0; i < values.size(); ++i) {
-        auto& v = values[i];
+    for (int i = 0; i < n; ++i) {
+        auto& v = samples[i];
 
         if (v.size() < 4) {
             continue; 
@@ -125,60 +106,37 @@ FeatureResult IQR::getResult() {
         for (int j = 0; j < v.size() / 2; ++j) { q1.push_back(v[j]); }
         for (int j = static_cast<int>(v.size()/2) + 1;j < v.size(); ++j){q3.push_back(v[j]);}
 
-        auto iqr = q3[q3.size()/2] - q1[q1.size() / 2];
-        res.add(savedNames[i], iqr);
+        res.push_back(q3[q3.size() / 2] - q1[q1.size() / 2]);
     }
     return res;
 }
 
-void Max::store(const FeatureResult& res) {
-    if (res.values.empty()) return;
+void Max::store(const float* values, int numValues) {
+    if (numValues == 0) return;
 
-    if (maxes.empty()) {
-        maxes.resize(res.values.size());
-        std::fill(maxes.begin(), maxes.end(), std::numeric_limits<float>::lowest());
-        savedNames = res.names;
-    }
-
-    for (int i = 0; i < res.values.size(); ++i) {
-        maxes[i] = jmax(maxes[i], res.values[i]);
+    for (int i = 0; i < numValues; ++i) {
+        maxes[i] = jmax(maxes[i], values[i]);
 
     }
 }
 
-FeatureResult Max::getResult() {
-    FeatureResult res;
+std::vector<float> Max::getResult() {
+    std::vector<float> res;
     if (maxes.empty()) return res;
-
-    for (int i = 0; i < maxes.size(); ++i) {
-        res.add(savedNames[i], maxes[i]);
-    }
-    return res;
+    return maxes;
 }
 
-void Min::store(const FeatureResult& res) {
-    if (res.values.empty()) return; 
+void Min::store(const float* values, int numValues) {
+    if (numValues == 0) return;
 
-    if (mins.empty()) {
-        mins.resize(res.values.size());
-        std::fill(mins.begin(), mins.end(), std::numeric_limits<float>::max());
-
-        savedNames = res.names;
-    }
-
-    for (int i = 0; i < res.values.size(); ++i) {
-        mins[i] = jmin(mins[i], res.values[i]);
-
+    for (int i = 0; i < numValues; ++i) {
+        mins[i] = jmin(mins[i], values[i]);
     }
 }
 
-FeatureResult Min::getResult() {
-    FeatureResult res;
+std::vector<float> Min::getResult() {
+    std::vector<float> res;
     if (mins.empty()) return res;
-
-    for (int i = 0; i < mins.size(); ++i) {
-        res.add(savedNames[i], mins[i]);
-    }
-    return res;
+    return mins;
 
 }
