@@ -27,6 +27,9 @@
               file="Source/MainComponent.cpp"/>
       </GROUP>
       <GROUP id="{02B46F79-98E0-4532-B5D3-B85AB15FE690}" name="DSP">
+        <GROUP id="{433C89A3-3B64-E2D4-2802-4599A5E53EDB}" name="Sinks">
+          <FILE id="dZFLx0" name="IResultSink.h" compile="0" resource="0" file="Source/IResultSink.h"/>
+        </GROUP>
         <GROUP id="{7FD838D0-D296-2116-CD81-CEDC16304D55}" name="Features">
           <FILE id="WVmU1U" name="FeatureResult.h" compile="0" resource="0" file="Source/FeatureResult.h"/>
           <FILE id="Ys1ZUi" name="Features.h" compile="0" resource="0" file="Source/Features.h"/>
