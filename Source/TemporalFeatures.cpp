@@ -50,7 +50,7 @@ void RRMS::processBlock(AudioBuffer<float>& buffer)
         ++historyIndex %= windowSize;
     }
 
-    rmsValue = static_cast<float>(sumRms / numSamples);
+    rmsValue[0] = static_cast<float>(sumRms / numSamples);
 }
 
 void RRMS::reset()
@@ -58,6 +58,7 @@ void RRMS::reset()
     windowSize = jlimit(1, roundToInt(maxTime * sampleRate), roundToInt(rmsTime * sampleRate));
     history.clear();
     aux.clear();
+    rmsValue = { 0.0f };
     historyIndex = 0;
     avg = 0.0;
 }
@@ -66,7 +67,7 @@ void PAN::processBlock(AudioBuffer<float>& buffer)
 {
     if (buffer.getNumChannels() < 2)
     {
-        panValue = 0.0f;
+        panValue[0] = 0.0f;
         return;
     }
 
@@ -88,10 +89,10 @@ void PAN::processBlock(AudioBuffer<float>& buffer)
     const float totalEnergy = lEnergy + rEnergy;
 
     if (totalEnergy < SILENCE_THRESH_SOFT) {
-        panValue = 0.0f;
+        panValue[0] = 0.0f;
     }
     else {
-        panValue = (rEnergy - lEnergy) / totalEnergy;
+        panValue[0] = (rEnergy - lEnergy) / totalEnergy;
     }
 }
 
@@ -103,6 +104,7 @@ void Brightness::prepareToPlay(double sr, int samplesPerBlock)
     filterBuffer.clear();
     sampleRate = sr;
     lastSample = 0.0f;
+    brightValue = { 0.0f };
 }
 
 void Brightness::releaseResources()
@@ -137,12 +139,8 @@ void Brightness::processBlock(AudioBuffer<float>& buffer)
     envelope.processBlock(buffer);
     filterEnvelope.processBlock(filterBuffer);
 
-    FeatureResult envData, fEnvData;
-    envelope.getResult(envData);
-    filterEnvelope.getResult(fEnvData);
-
-    float envVal = envData.values.empty() ? 0.0f : envData.values[0];
-    float fEnvVal = fEnvData.values.empty() ? 0.0f : fEnvData.values[0];
+    float envVal = envelope.values()[0];
+    float fEnvVal = filterEnvelope.values()[0];
 
     float b = 0.0f;
 
@@ -155,7 +153,7 @@ void Brightness::processBlock(AudioBuffer<float>& buffer)
     }
 
     b = jlimit(0.0f, 2.0f, b);
-    brightValue = static_cast<float>((sampleRate / MathConstants<float>::pi) * (asin(b / 2.0f)));
+    brightValue[0] = static_cast<float>((sampleRate / MathConstants<float>::pi) * (asin(b / 2.0f)));
 }
 
 void ZCR::processBlock(AudioBuffer<float>& buffer)
@@ -198,5 +196,5 @@ void ZCR::processBlock(AudioBuffer<float>& buffer)
 
     }
 
-    zcrValue = (float)crossCount / numSamples;
+    zcrValue[0] = (float)crossCount / numSamples;
 }

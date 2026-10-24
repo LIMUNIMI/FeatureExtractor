@@ -13,20 +13,13 @@ public:
 		spread = 0.0f;
 		skewness = 0.0f;
 		kurtosis = 0.0f;
+		moments = { 0.0f, 0.0f, 0.0f, 0.0f };
 	}
 
 	String getName() const override { return "Spectral Moments"; }
 
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	}
-
-	void createResultPackage(FeatureResult& featPackage) override {
-		featPackage.add("Centroid", centroid);
-		featPackage.add("Spread", spread);
-		featPackage.add("Skewness", skewness);
-		featPackage.add("Kurtosis", kurtosis);
-	}
+	juce::StringArray outputNames() const override { return { "Centroid", "Spread", "Skewness", "Kurtosis" }; };
+	const std::vector<float>& values() const override { return moments; };
 
 	void calculateSpectralFeatures(const std::vector<float>& magnitudes, int fftSize, int numBins) override;
 
@@ -35,6 +28,7 @@ private:
 	float spread = 0.0f;
 	float skewness = 0.0f;
 	float kurtosis = 0.0f;
+	std::vector<float> moments = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralMoments)
 };
@@ -51,17 +45,13 @@ public:
 		setupAlgorithmParameters(); 
 		mCurrentPitchHz = 0.0f;
 		mCurrentStrength = 0.0f;
+		f0 = { 0.0f };
 	}
 
 	String getName() const override { return "Fundamental frequency"; }
 
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	}
-
-	void createResultPackage(FeatureResult& featPackage) override {
-		featPackage.add("Fundamental Frequency", mCurrentPitchHz);
-	}
+	juce::StringArray outputNames() const override { return "Fundamental Frequency"; };
+	const std::vector<float>& values() const override { return f0; };
 
 	void calculateSpectralFeatures(const std::vector<float>& magnitudes, int fftSize, int numBins) override;
 
@@ -72,6 +62,7 @@ private:
 	int mBlockSize = 512;
 	float mCurrentPitchHz = 0.0f;
 	float mCurrentStrength = 0.0f;
+	std::vector<float> f0 = { 0.0f };
 
 	// Parametri algoritmo SWIPE 
 	double mMinFreq = 80.0;
@@ -115,26 +106,18 @@ public:
 
 	String getName() const override { return "Chromagram"; }
 
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	}
-
 	void releaseResources() override {
 		SpectralFeature::releaseResources();
-		chroma.fill(0.0f);                   
-	}
-	
-	void createResultPackage(FeatureResult& featPackage) override {
-		StringArray noteNames{ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-		for (int i = 0; i < 12; ++i) {
-			featPackage.add(noteNames[i], chroma[i]);
-		}
+		std::fill(chroma.begin(), chroma.end(), 0.0f);
 	}
 
+	juce::StringArray outputNames() const override { return { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" }; };
+	const std::vector<float>& values() const override { return chroma; };
+	
 	void calculateSpectralFeatures(const std::vector<float>& magnitudes, int fftSize, int numBins) override;
 
 private:
-	std::array<float, 12> chroma{};
+	std::vector<float> chroma = std::vector<float>(12, 0.0f);
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Chromagram)
 };

@@ -46,6 +46,8 @@ void SpectralMoments::calculateSpectralFeatures(const std::vector<float>& magnit
         skewness = 0.0f;
         kurtosis = 0.0f;
     }
+
+    moments = { centroid, spread, skewness, kurtosis };
 }
 
 double F0::hzToErb(double hz)
@@ -185,6 +187,8 @@ void F0::calculateSpectralFeatures(const std::vector<float>& magnitudes, int fft
 
     calculateStrength();
     findPitch();
+
+    f0[0] = mCurrentPitchHz;
 }
 
 void F0::findPitch()
@@ -300,11 +304,11 @@ void F0::calculateStrength() {
 
 void Chromagram::prepareToPlay(double sr, int samplesPerBlock) {
     SpectralFeature::prepareToPlay(sr, samplesPerBlock);
-    std::fill(chroma.begin(), chroma.end(), 0.0f);
+    chroma = std::vector<float>(12, 0.0f);
 }
 
 void Chromagram::calculateSpectralFeatures(const std::vector<float>& magnitudes, int fftSize, int numBins) {
-    chroma.fill(0.0f);
+    std::fill(chroma.begin(), chroma.end(), 0.0f);
     const float binToHz = static_cast<float>(sampleRate) / static_cast<float>(fftSize); //converto bin in hz
 
     for (int i = 1; i < numBins - 2; ++i) {

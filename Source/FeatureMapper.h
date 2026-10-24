@@ -8,7 +8,7 @@ public:
 	MidiMapper() {};
 	~MidiMapper() {};
 
-	void toMidi(const FeatureResult& res, String name, MidiBuffer& midiMessages);
+	void toMidi(const std::vector<float>& res, String name, MidiBuffer& midiMessages);
 	void resetValues() { lastNote = -1; lastChord.clear(); }
 
 private:
@@ -22,7 +22,7 @@ public:
 	OscMapper() {};
 	~OscMapper() {};
 
-	void toOsc(const FeatureResult& res, String name, OSCSender& sender);
+	void toOsc(const std::vector<float>& res, String name, OSCSender& sender);
 
 private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscMapper)

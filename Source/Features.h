@@ -10,8 +10,8 @@ public:
 
     virtual ~Feature() = default;
 
-    virtual void createResultPackage(FeatureResult& featPackage) = 0;
-    virtual void getResult(FeatureResult& featPackage) = 0;
+	virtual juce::StringArray outputNames() const = 0;    // invariante, chiamato in preparazione
+	virtual const std::vector<float>& values() const = 0;  // memoria posseduta dalla feature
     virtual juce::String getName() const = 0;
     virtual void prepareToPlay(double sr, int samplesPerBlock) = 0;
     virtual void releaseResources() = 0;

@@ -16,19 +16,14 @@ public:
 
 	void processBlock(AudioBuffer<float>& buffer) override;
 
-	void createResultPackage(FeatureResult& featPackage) override {
-		featPackage.add("RMS", rmsValue);
-	}
-
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	};
+	juce::StringArray outputNames() const override { return "RMS"; };   
+	const std::vector<float>& values() const override { return rmsValue; };
 
 private:
 	void reset();
 
 	AudioBuffer<float> aux;
-	float rmsValue = 0.0f;
+	std::vector<float> rmsValue = { 0.0f };
 	float avg = 0;
 	AudioBuffer<float> history;
 	int historyIndex = 0;
@@ -48,22 +43,17 @@ public:
 
 	String getName() const override { return "PAN"; }
 
-	void prepareToPlay(double, int) override {};
+	void prepareToPlay(double, int) override { panValue = { 0.0f }; };
 
 	void releaseResources() override {};
 
 	void processBlock(AudioBuffer<float>& buffer) override;
 
-	void createResultPackage(FeatureResult& featPackage) override {
-		featPackage.add("PAN", panValue);
-	}
-
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	};
+	juce::StringArray outputNames() const override { return "PAN"; };
+	const std::vector<float>& values() const override { return panValue; };
 
 private:
-	float panValue = 0.0f;
+	std::vector<float> panValue = { 0.0f };
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PAN)
 };
@@ -82,17 +72,12 @@ public:
 
 	void processBlock(AudioBuffer<float>& buffer) override;
 
-	void createResultPackage(FeatureResult& featPackage) override {
-		featPackage.add("Brightness", brightValue);
-	}
-
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	}
+	juce::StringArray outputNames() const override { return "Brightness"; };
+	const std::vector<float>& values() const override { return brightValue; };
 
 private:
 	AudioBuffer<float> filterBuffer;
-	float brightValue = 0.0f;
+	std::vector<float> brightValue = { 0.0f };
 	double sampleRate = 44100.;
 	RRMS envelope, filterEnvelope;
 	float lastSample = 0.0f;
@@ -108,22 +93,17 @@ public:
 
 	String getName() const override { return "ZCR"; }
 
-	void prepareToPlay(double, int) override { lastSign = 0; zcrValue = 0.0f; };
+	void prepareToPlay(double, int) override { lastSign = 0; zcrValue = { 0.0f }; };
 
 	void releaseResources() override {};
 
 	void processBlock(AudioBuffer<float>& buffer) override;
 
-	void createResultPackage(FeatureResult& featPackage) override {
-		featPackage.add("ZCR", zcrValue);
-	}
-
-	void getResult(FeatureResult& featPackage) override {
-		createResultPackage(featPackage);
-	}
+	juce::StringArray outputNames() const override { return "ZCR"; };
+	const std::vector<float>& values() const override { return zcrValue; };
 
 private:
-	float zcrValue = 0.0f;
+	std::vector<float> zcrValue = { 0.0f };
 	int lastSign = 0;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ZCR)

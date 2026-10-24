@@ -75,14 +75,12 @@ void MyFeatureExtractor::getNextAudioBlock(const AudioSourceChannelInfo& bufferT
             midiBuffer.clear();
             for (auto f : activeFeatures) {
                 f->processBlock(proxyBuffer);
-                FeatureResult res;
-                f->getResult(res);
                 if (sampleCount <= 0) {
                     if (midiEnabled) {
-                        midiMapper.toMidi(res, f->getName(), midiBuffer);
+                        midiMapper.toMidi(f->values(), f->getName(), midiBuffer);
                     }
                     if (oscEnabled) {
-                        oscMapper.toOsc(res, f->getName(), oscSender);
+                        oscMapper.toOsc(f->values(), f->getName(), oscSender);
                     }
                 }
             }
@@ -125,19 +123,17 @@ void MyFeatureExtractor::run() {
 
     if (auto outputStream = std::unique_ptr<FileOutputStream>(fileScrittura.createOutputStream())) {
 
-        int numCol = 0;
+        FeatureResult featPackage;
         for (auto* f : activeFeatures) {
-            FeatureResult tmpRes;
-            f->createResultPackage(tmpRes);
-            numCol += tmpRes.values.size();
+            featPackage.names.addArray(f->outputNames());
         }
+        int numCol = featPackage.names.size();
+        featPackage.values.resize(numCol);
 
         String header = "File_Name";
         for (auto* func : activeFunctionals) {
             for (auto* f : activeFeatures) {
-                FeatureResult dummyRes;
-                f->createResultPackage(dummyRes);
-                for (const auto& name : dummyRes.names) {
+                for (const auto& name : f->outputNames()) {
                     header << ";" << name << "_" << func->getName();
                 }
             }
@@ -146,6 +142,7 @@ void MyFeatureExtractor::run() {
         outputStream->writeText(header + "\n", false, false, nullptr);
         int progressCount = 0;
         for (const auto& file : filesToProcessRun) {
+
             std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(file));
             if (reader != nullptr) {
                 for (auto* f : activeFeatures) {
@@ -163,10 +160,12 @@ void MyFeatureExtractor::run() {
 
                     reader->read(&buffer, 0, BATCH_BLOCK_SIZE, startSample, true, true);
 
-                    FeatureResult featPackage;
+                    int i = 0;
                     for (auto* f : activeFeatures) {
                         f->processBlock(buffer);
-                        f->getResult(featPackage);
+                        for (float val : f->values()) {
+                            featPackage.values[i++] = val;
+                        }
                     }
 
                     for (auto* func : activeFunctionals) {
