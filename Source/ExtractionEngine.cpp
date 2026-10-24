@@ -125,6 +125,13 @@ void MyFeatureExtractor::run() {
 
     if (auto outputStream = std::unique_ptr<FileOutputStream>(fileScrittura.createOutputStream())) {
 
+        int numCol = 0;
+        for (auto* f : activeFeatures) {
+            FeatureResult tmpRes;
+            f->createResultPackage(tmpRes);
+            numCol += tmpRes.values.size();
+        }
+
         String header = "File_Name";
         for (auto* func : activeFunctionals) {
             for (auto* f : activeFeatures) {
@@ -172,8 +179,11 @@ void MyFeatureExtractor::run() {
 
                 for (auto* func : activeFunctionals) {
                     auto res = func->getResult();
-                    for (float val : res.values) {
-                        riga << ";" << String(val, 4).replace(".", ",");
+                    for (int n = 0; n < numCol; n++) {
+                        riga << ";";
+                        if (n < res.values.size()) {
+                            riga << String(res.values[n], 4).replace(".", ",");
+                        }
                     }
                 }
                 outputStream->writeText(riga + "\n", false, false, nullptr);
