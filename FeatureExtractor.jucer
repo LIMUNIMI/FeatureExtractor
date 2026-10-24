@@ -35,7 +35,6 @@
           <FILE id="dZFLx0" name="IResultSink.h" compile="0" resource="0" file="Source/IResultSink.h"/>
         </GROUP>
         <GROUP id="{7FD838D0-D296-2116-CD81-CEDC16304D55}" name="Features">
-          <FILE id="WVmU1U" name="FeatureResult.h" compile="0" resource="0" file="Source/FeatureResult.h"/>
           <FILE id="Ys1ZUi" name="Features.h" compile="0" resource="0" file="Source/Features.h"/>
           <FILE id="kKLf4x" name="Features.cpp" compile="1" resource="0" file="Source/Features.cpp"/>
           <FILE id="u9Lfg6" name="TemporalFeatures.h" compile="0" resource="0"
@@ -47,6 +46,7 @@
           <FILE id="RnmEEa" name="TemporalFeatures.cpp" compile="1" resource="0"
                 file="Source/TemporalFeatures.cpp"/>
         </GROUP>
+        <FILE id="qJOV73" name="Costants.h" compile="0" resource="0" file="Source/Costants.h"/>
         <FILE id="FSSah1" name="Functionals.cpp" compile="1" resource="0" file="Source/Functionals.cpp"/>
         <FILE id="iH1aGu" name="Functionals.h" compile="0" resource="0" file="Source/Functionals.h"/>
         <FILE id="Uyws85" name="ExtractionEngine.cpp" compile="1" resource="0"

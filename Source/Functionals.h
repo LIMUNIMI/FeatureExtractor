@@ -1,6 +1,6 @@
 #pragma once
 #include <JuceHeader.h>
-#include "FeatureResult.h"
+#include "Costants.h"
 
 class Functional {
 public:

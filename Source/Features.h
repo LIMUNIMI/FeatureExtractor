@@ -1,7 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "Spectrogram.h"
-#include "FeatureResult.h"
+#include "Costants.h"
 
 //TODO: commentare procedura aggiunta feature
 class Feature {
