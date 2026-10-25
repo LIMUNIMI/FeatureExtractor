@@ -2,6 +2,8 @@
 #include "TemporalFeatures.h"
 #include "SpectralFeatures.h"
 #include "CsvAggregateSink.h"
+#include "CsvFrameSink.h"
+#include "BatchSink.h"
 
 
 #define BATCH_BLOCK_SIZE 1024
@@ -115,11 +117,16 @@ void MyFeatureExtractor::run() {
     auto startTime = Time::getMillisecondCounterHiRes();
     bool processCancelled = false;
 
-    CsvAggregateSink sink(File(csvPath).getChildFile(csvFileName + ".csv"), activeFunctionals);
+    CsvAggregateSink aggSink(File(csvPath).getChildFile(csvFileName + ".csv"), activeFunctionals);
+    CsvFrameSink frameSink(File(csvPath).getChildFile(csvFileName + "_frames.csv"));
 
-    bool outputFail = sink.isNull();
+    bool outputFail = (aggSink.isNull() || frameSink.isNull());
 
     if (!outputFail) {
+
+        BatchSink sink;
+        sink.add(&aggSink);
+        sink.add(&frameSink);
 
         StringArray schema;
         for (auto* f : activeFeatures) {
@@ -169,8 +176,6 @@ void MyFeatureExtractor::run() {
 
         sink.end();
     }
-
-    else { outputFail = true; }
 
     auto stopTime = Time::getMillisecondCounterHiRes();
     auto totalTimeSeconds = (stopTime - startTime) / 1000.0f;
