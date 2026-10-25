@@ -1,17 +1,12 @@
 #pragma once
 #include "IResultSink.h"
-#include "Functionals.h"
-
-struct CsvFormat {
-	juce::String sep = ";";
-	juce::String decimalSep = ",";
-	int precision = 4;
-};
+#include "Functionals.h" 
+#include "CsvFormat.h" 
 
 class CsvAggregateSink : public IResultSink {
 
 public:
-	CsvAggregateSink(const juce::File& file, std::vector<Functional*> functionalsSelected);
+	CsvAggregateSink(const juce::File& file, std::vector<Functional*> functionalsSelected, const CsvFormat& format = CsvFormat());
 	void begin(const juce::StringArray& schema) override;
 	void onFileBegin(const juce::String& fileName) override;
 	void onFrame(const float* values, int numValues) override;

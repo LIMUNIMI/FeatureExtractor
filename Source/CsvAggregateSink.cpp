@@ -1,7 +1,7 @@
 #include "CsvAggregateSink.h"
 
-CsvAggregateSink::CsvAggregateSink(const juce::File& file, std::vector<Functional*> functionalsSelected)
-	: activeFunctionals(std::move(functionalsSelected))
+CsvAggregateSink::CsvAggregateSink(const juce::File& file, std::vector<Functional*> functionalsSelected, const CsvFormat& format)
+	: activeFunctionals(std::move(functionalsSelected)), csvFormat(format)
 {
     open(file);
 }
