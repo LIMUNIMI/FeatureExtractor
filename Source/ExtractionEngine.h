@@ -5,6 +5,8 @@
 #include "FeatureMapper.h"
 #include "AudioPlayer.h"
 
+#include "MidiOscSink.h"
+
 class MyFeatureExtractor : public ThreadWithProgressWindow {
 public:
 	MyFeatureExtractor(AudioDeviceManager &audioDeviceManager);
@@ -30,15 +32,15 @@ public:
 	String getOscIP() const { return oscIP; }
 	int getOscPort() const { return oscPort; }
 	void setOscPort(int port) { oscPort = port; }
-	void connectOsc() { oscSender.connect(oscIP, oscPort); }
-	void setOscEnabled(bool enabled) { oscEnabled = enabled; }
+	void connectOsc() { liveSink.connectOsc(oscIP, oscPort); }
+	void setOscEnabled(bool enabled) { liveSink.setOscEnabled(enabled); }
 
 	//midi
-	bool setMidiOutput(int index);
+	bool setMidiOutput(int index) { return liveSink.setMidiOutput(index); };
 	StringArray getMidiOutput() const { return midiOutputNames; }
-	void setMidiEnabled(bool enabled) { midiEnabled = enabled; }
+	void setMidiEnabled(bool enabled) { liveSink.setMidiEnabled(enabled); }
 
-	void setUpdateRate(double newHz) { updateRate = newHz; }
+	void setUpdateRate(double newHz) { liveSink.setUpdateRate(newHz); }
 
 	//live input
 	void setLiveMode(bool shouldBeEnabled) { liveBool = shouldBeEnabled; }
@@ -52,9 +54,7 @@ public:
 	//feature stuff
 	std::function<void()> onPrepareForBatch;
 	void prepareLiveFeatures();
-	void setActiveFeatures(std::vector<Feature*> features) {
-		activeFeatures = features;
-	}
+	void setActiveFeatures(std::vector<Feature*> features) { activeFeatures = features; buildLiveSink(); };
 
 	void setActiveFunctionals(std::vector<Functional*> functionals) {
 		activeFunctionals = functionals;
@@ -70,18 +70,11 @@ private:
 	String csvFileName = "Feature_analysis";
 
 	//midi
-	std::atomic<bool> midiEnabled = false;
-	int lastOutputIndex = 0;
 	StringArray midiOutputNames;
-	MidiBuffer midiBuffer;
-	MidiMapper midiMapper;
 
 	AudioDeviceManager& deviceManager; //gestione midi i/o
 
 	//osc
-	std::atomic<bool> oscEnabled = false;
-	OscMapper oscMapper;
-	OSCSender oscSender;
 	String oscIP = "127.0.0.1";
 	int oscPort = 9001;
 
@@ -90,6 +83,9 @@ private:
 	std::atomic<bool> monitorBool = false;
 	AudioPlayer audioPlayer;
 	AudioFormatManager formatManager;
+	MidiOscSink liveSink{ deviceManager };
+	std::vector<float> liveFrame;
+	void buildLiveSink();
 
 	//batch mode
 	void processFile(std::vector<File> filesToProcess);
@@ -99,8 +95,6 @@ private:
 	//msg sample rate
 	double sr = 44100.;
 	int bufferSize = 512;
-	double updateRate = 50.0;
-	int sampleCount = 0;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyFeatureExtractor)
 };

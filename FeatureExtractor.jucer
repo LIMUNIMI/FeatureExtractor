@@ -38,6 +38,8 @@
                 file="Source/CsvFrameSink.cpp"/>
           <FILE id="HDC68o" name="CsvFrameSink.h" compile="0" resource="0" file="Source/CsvFrameSink.h"/>
           <FILE id="dZFLx0" name="IResultSink.h" compile="0" resource="0" file="Source/IResultSink.h"/>
+          <FILE id="LUZoI4" name="MidiOscSink.cpp" compile="1" resource="0" file="Source/MidiOscSink.cpp"/>
+          <FILE id="oxXXAA" name="MidiOscSink.h" compile="0" resource="0" file="Source/MidiOscSink.h"/>
         </GROUP>
         <GROUP id="{7FD838D0-D296-2116-CD81-CEDC16304D55}" name="Features">
           <FILE id="Ys1ZUi" name="Features.h" compile="0" resource="0" file="Source/Features.h"/>

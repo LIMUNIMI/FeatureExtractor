@@ -9,7 +9,8 @@
 #define BATCH_BLOCK_SIZE 1024
 
 MyFeatureExtractor::MyFeatureExtractor(AudioDeviceManager& audioDeviceManager) : 
-    audioPlayer(formatManager), ThreadWithProgressWindow("Processing files...", true, true), deviceManager(audioDeviceManager) {
+    audioPlayer(formatManager), ThreadWithProgressWindow("Processing files...", true, true), deviceManager(audioDeviceManager) 
+{
 	csvPath = File::getSpecialLocation(File::userHomeDirectory).getFullPathName();
 
     audioPlayer.onProcessRequested = [this](std::vector<File> filesToProcess) {
@@ -17,7 +18,7 @@ MyFeatureExtractor::MyFeatureExtractor(AudioDeviceManager& audioDeviceManager) :
     };
 
     audioPlayer.onPlaybackStopped = [this] {
-        midiMapper.resetValues();
+
         if (onStateChanged) onStateChanged();
     };
 
@@ -26,7 +27,7 @@ MyFeatureExtractor::MyFeatureExtractor(AudioDeviceManager& audioDeviceManager) :
 
     formatManager.registerBasicFormats();
 
-    if (!oscSender.connect(oscIP, oscPort)) {
+    if (!liveSink.connectOsc(oscIP, oscPort)) {
         AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
             "Connection error", "Error: could not send OSC message.", "OK");
     }
@@ -34,16 +35,11 @@ MyFeatureExtractor::MyFeatureExtractor(AudioDeviceManager& audioDeviceManager) :
     deviceManager.initialise(2, 2, nullptr, true);
 }
 
-bool MyFeatureExtractor::setMidiOutput(int index)
-{
-    auto list = MidiOutput::getAvailableDevices();
-    if (list.size() > 0)
-    {
-        auto newInput = list[index];
-        deviceManager.setDefaultMidiOutputDevice(newInput.identifier);
-        return true;
-    }
-    return false;
+void MyFeatureExtractor::buildLiveSink() {
+
+    liveSink.prepareToPlay(bufferSize, sr);
+    liveSink.setFeatures(activeFeatures);
+    liveFrame.assign(liveSink.getNumCol(), 0.0f);
 }
 
 void MyFeatureExtractor::prepareLiveFeatures() {
@@ -51,13 +47,14 @@ void MyFeatureExtractor::prepareLiveFeatures() {
     for (auto* f : activeFeatures) {
         f->prepareToPlay(sr, bufferSize);
     }
+    buildLiveSink();
 }
 
 void MyFeatureExtractor::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 {
     sr = sampleRate;
     bufferSize = samplesPerBlockExpected;
-    sampleCount = static_cast<int>(sr / updateRate);
+    prepareLiveFeatures();
     audioPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
@@ -74,31 +71,18 @@ void MyFeatureExtractor::getNextAudioBlock(const AudioSourceChannelInfo& bufferT
                 bufferToFill.startSample,
                 bufferToFill.numSamples);
 
-            sampleCount -= bufferToFill.numSamples;
-
-            midiBuffer.clear();
+            int numValues = 0;
             for (auto f : activeFeatures) {
                 f->processBlock(proxyBuffer);
-                if (sampleCount <= 0) {
-                    if (midiEnabled) {
-                        midiMapper.toMidi(f->values(), f->getName(), midiBuffer);
-                    }
-                    if (oscEnabled) {
-                        oscMapper.toOsc(f->values(), f->getName(), oscSender);
+                for (float val : f->values()) {
+                    if (numValues < liveFrame.size()) {
+                        liveFrame[numValues++] = val;
                     }
                 }
             }
-            if (sampleCount <= 0) {
-                if (midiEnabled && !midiBuffer.isEmpty()) {
-                    if (auto* output = deviceManager.getDefaultMidiOutput()) {
-                        output->sendBlockOfMessagesNow(midiBuffer);
-                    }
-                }
 
-                sampleCount = static_cast<int>(sr / updateRate);
-            }
+            liveSink.push(liveFrame.data(), numValues, bufferToFill.numSamples);
         }
-        
     }
 }
 
