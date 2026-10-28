@@ -90,7 +90,10 @@ private:
 	//batch mode
 	void processFile(std::vector<File> filesToProcess);
 	std::vector<File> filesToProcessRun;
-	void run() override;
+	juce::StringArray buildSchema() const;	// intestazione, una volta
+	static bool processOneFile(const juce::File& file, IResultSink& sink, juce::AudioFormatManager& format,
+		const std::vector<Feature*>& features, juce::Thread& thread);	// worker: un file, tutti i blocchi
+	void run() override;	// orchestratore: cicla, progresso, annulla
 
 	//msg sample rate
 	double sr = 44100.;

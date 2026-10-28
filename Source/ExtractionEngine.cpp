@@ -31,8 +31,6 @@ MyFeatureExtractor::MyFeatureExtractor(AudioDeviceManager& audioDeviceManager) :
         AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
             "Connection error", "Error: could not send OSC message.", "OK");
     }
-
-    deviceManager.initialise(2, 2, nullptr, true);
 }
 
 void MyFeatureExtractor::buildLiveSink() {
@@ -54,7 +52,9 @@ void MyFeatureExtractor::prepareToPlay(int samplesPerBlockExpected, double sampl
 {
     sr = sampleRate;
     bufferSize = samplesPerBlockExpected;
-    prepareLiveFeatures();
+    if (!isThreadRunning()) {
+        prepareLiveFeatures();
+    } 
     audioPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
@@ -97,6 +97,58 @@ void MyFeatureExtractor::processFile(std::vector<File> filesToProcess) {
     ThreadWithProgressWindow::launchThread();
 }
 
+juce::StringArray MyFeatureExtractor::buildSchema() const {
+
+    StringArray schema;
+    for (auto* f : activeFeatures) {
+        schema.addArray(f->outputNames());
+    }
+    return schema;
+}
+
+bool MyFeatureExtractor::processOneFile(const juce::File& file, IResultSink& sink, juce::AudioFormatManager& format,
+    const std::vector<Feature*>& features, juce::Thread& thread) {
+
+    std::unique_ptr<AudioFormatReader> reader(format.createReaderFor(file));
+    if (reader != nullptr) {
+        
+        int numCol = 0;
+        for (auto* f : features) {
+            f->prepareToPlay(reader->sampleRate, BATCH_BLOCK_SIZE);
+            numCol += f->outputNames().size();
+        }
+
+        sink.onFileBegin(file.getFileName());
+        AudioBuffer<float> buffer(reader->numChannels, BATCH_BLOCK_SIZE);
+        int64 startSample = 0;
+        std::vector<float> frame(numCol);
+
+        while (startSample < reader->lengthInSamples) {
+            if (thread.threadShouldExit()) { 
+                return false; 
+            }
+
+            reader->read(&buffer, 0, BATCH_BLOCK_SIZE, startSample, true, true);
+
+            int i = 0;
+            for (auto* f : features) {
+                f->processBlock(buffer);
+                for (float val : f->values()) {
+                    frame[i++] = val;
+                }
+            }
+            sink.onFrame(frame.data(), numCol);
+
+            startSample += BATCH_BLOCK_SIZE;
+        }
+
+        sink.onFileEnd(file.getFileName());
+        return true;
+    }
+
+    return true;
+}
+
 void MyFeatureExtractor::run() {
     auto startTime = Time::getMillisecondCounterHiRes();
     bool processCancelled = false;
@@ -112,50 +164,20 @@ void MyFeatureExtractor::run() {
         sink.add(&aggSink);
         sink.add(&frameSink);
 
-        StringArray schema;
-        for (auto* f : activeFeatures) {
-            schema.addArray(f->outputNames());
-        }
-        int numCol = schema.size();
-
-        sink.begin(schema);
-        std::vector<float> frame(numCol);
+        sink.begin(buildSchema());
 
         int progressCount = 0;
+
         for (const auto& file : filesToProcessRun) {
-
-            std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(file));
-            if (reader != nullptr) {
-                for (auto* f : activeFeatures) {
-                    f->prepareToPlay(reader->sampleRate, BATCH_BLOCK_SIZE);
-                }
-                
-                sink.onFileBegin(file.getFileName());
-
-                AudioBuffer<float> buffer(reader->numChannels, BATCH_BLOCK_SIZE);
-                int64 startSample = 0;
-
-                while (startSample < reader->lengthInSamples) {
-                    if (threadShouldExit()) { processCancelled = true; break; }
-
-                    reader->read(&buffer, 0, BATCH_BLOCK_SIZE, startSample, true, true);
-
-                    int i = 0;
-                    for (auto* f : activeFeatures) {
-                        f->processBlock(buffer);
-                        for (float val : f->values()) {
-                            frame[i++] = val;
-                        }
-                    }
-                    sink.onFrame(frame.data(), numCol);
-
-                    startSample += BATCH_BLOCK_SIZE;
-                }
-
-                sink.onFileEnd(file.getFileName());
+           
+            if (processOneFile(file, sink, formatManager ,activeFeatures, *this)) {
+                setProgress(progressCount / (double)filesToProcessRun.size());
+                progressCount++;
             }
-            setProgress(progressCount / (double)filesToProcessRun.size());
-            progressCount++;
+            else {
+                processCancelled = true;
+                break;
+            }
         }
 
         sink.end();
@@ -192,5 +214,8 @@ void MyFeatureExtractor::run() {
 
 void MyFeatureExtractor::releaseResources() {
     audioPlayer.releaseResources();
-    for (auto* f : activeFeatures) f->releaseResources();
+    if (!isThreadRunning()) {
+        for (auto* f : activeFeatures) f->releaseResources();
+    }
+    
 }
