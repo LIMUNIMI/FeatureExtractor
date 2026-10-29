@@ -18,7 +18,11 @@ public:
 	void onFrame(const float* values, int numValues) override { push(values, numValues, bufferSize); };
 
 	//osc
-	bool connectOsc(String& ip, int port) { return oscSender.connect(ip, port); }
+	bool connectOsc(String& ip, int port) {
+		const ScopedLock sl(lock);
+		return oscSender.connect(ip, port); 
+	}
+
 	void setOscEnabled(bool enabled) { oscEnabled = enabled; }
 
 	//midi
@@ -28,10 +32,11 @@ public:
 	void setUpdateRate(double newHz) { updateRate = newHz; }
 	int getNumCol() const { return numCol; }
 
+	static constexpr int N_MAX_COL = 128;
 
 private:
 
-	static constexpr int N_MAX_COL = 128;
+	CriticalSection lock;
 
 	struct Frame {
 		int n;

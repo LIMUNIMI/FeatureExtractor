@@ -11,6 +11,7 @@ bool MidiOscSink::setMidiOutput(int index)
     if (list.size() > 0)
     {
         auto newInput = list[index];
+        const ScopedLock sl(lock);
         deviceManager.setDefaultMidiOutputDevice(newInput.identifier);
         return true;
     }
@@ -29,6 +30,7 @@ void MidiOscSink::setFeatures(const std::vector<Feature*>& features)
         offset += count;
     }
     
+    const ScopedLock sl(lock);
     featuresLayout = std::move(layout);
     numCol = offset;
 }
@@ -103,6 +105,8 @@ bool MidiOscSink::pop(Frame& frame)
 
 void MidiOscSink::send(Frame& frame)
 {
+    const ScopedLock sl(lock);
+
     if (frame.n != numCol) {
         return;
     }
