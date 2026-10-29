@@ -37,7 +37,6 @@ void MyFeatureExtractor::buildLiveSink() {
 
     liveSink.prepareToPlay(bufferSize, sr);
     liveSink.setFeatures(activeFeatures);
-    liveFrame.assign(liveSink.getNumCol(), 0.0f);
 }
 
 void MyFeatureExtractor::prepareLiveFeatures() {
@@ -47,6 +46,7 @@ void MyFeatureExtractor::prepareLiveFeatures() {
     }
     buildLiveSink();
 }
+
 
 void MyFeatureExtractor::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 {

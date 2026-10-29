@@ -72,7 +72,7 @@ private:
 	String csvPath;
 	String csvFileName = "Feature_analysis";
 	CsvFormat csvFormat;
-	Export exportMode;
+	Export exportMode = Export::Aggregate;
 
 	//midi
 	StringArray midiOutputNames;
@@ -89,7 +89,7 @@ private:
 	AudioPlayer audioPlayer;
 	AudioFormatManager formatManager;
 	MidiOscSink liveSink{ deviceManager };
-	std::vector<float> liveFrame;
+	std::array<float, MidiOscSink::N_MAX_COL> liveFrame{};
 	void buildLiveSink();
 
 	//batch mode
