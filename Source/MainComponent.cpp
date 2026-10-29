@@ -81,7 +81,6 @@ MainComponent::MainComponent() {
     rateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     rateSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
     rateSlider.setRange(5.0, 50.0, 1.0);
-    rateSlider.setValue(20.0);
     rateSlider.setTextValueSuffix(" Hz");
     rateSlider.onValueChange = [this] {extractor.setUpdateRate(rateSlider.getValue()); };
 
@@ -141,6 +140,60 @@ MainComponent::MainComponent() {
 
     addAndMakeVisible(csvNameLabel);
     csvNameLabel.setText("CSV File Name:", juce::dontSendNotification);
+    
+    /// new
+    addAndMakeVisible(exportLabel);
+    exportLabel.setText("Export:", juce::dontSendNotification);
+
+    addAndMakeVisible(exportModeList);
+    exportModeList.addItem("Aggregate", 1);
+    exportModeList.addItem("Frame", 2);
+    exportModeList.addItem("Both", 3);
+    exportModeList.setSelectedId(1, juce::dontSendNotification);
+    exportModeList.onChange = [this] {
+        updateBatch();
+    };
+
+    addAndMakeVisible(sepLabel);
+    sepLabel.setText("Sep:", juce::dontSendNotification);
+
+
+    addAndMakeVisible(sepEditor);
+    sepEditor.setInputRestrictions(1);
+    sepEditor.setText(";");
+    sepEditor.setJustification(juce::Justification::centred);
+    sepEditor.onTextChange = [this] {
+        updateBatch();
+    };
+
+    addAndMakeVisible(decSepLabel);
+    decSepLabel.setText("Dec:", juce::dontSendNotification);
+
+    addAndMakeVisible(decSepEditor);
+    decSepEditor.setInputRestrictions(1);
+    decSepEditor.setText(",");
+    decSepEditor.setJustification(juce::Justification::centred);
+    decSepEditor.onTextChange = [this] {
+        updateBatch();
+    };
+
+    addAndMakeVisible(precisionLabel);
+    precisionLabel.setText("Prec:", juce::dontSendNotification);
+
+    addAndMakeVisible(precisionList);
+
+    for (int n = 1; n < 7; n++) {
+        precisionList.addItem(juce::String(n), n);
+    }
+
+    precisionList.setSelectedId(4, juce::dontSendNotification);
+    precisionList.onChange = [this] {
+        updateBatch();
+    };
+
+    updateBatch();
+
+    //
 
     extractor.onStateChanged = [this] { juce::MessageManager::callAsync([this] {
         updateInterfaceState();
@@ -199,7 +252,7 @@ MainComponent::MainComponent() {
     addAndMakeVisible(&featList);
     addAndMakeVisible(&funcList);
 
-    setSize(925, 700);
+    setSize(925, 850);
 
     if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
         && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio)) {
@@ -228,6 +281,39 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
     }
 }
 
+void MainComponent::updateBatch()
+{
+    switch (exportModeList.getSelectedId()) {
+    case 1:
+        extractor.setExport(Export::Aggregate);
+        break;
+    case 2:
+        extractor.setExport(Export::Frame);
+        break;
+    case 3:
+        extractor.setExport(Export::Both);
+        break;
+    }
+
+    juce::String sep = sepEditor.getText();
+    juce::String decSep = decSepEditor.getText();
+
+    if (sep.isEmpty()) {
+        sep = ";";
+    }
+
+    if (decSep.isEmpty()) {
+        decSep = ",";
+    }
+
+    CsvFormat newFormat;
+    newFormat.sep = sep;
+    newFormat.decimalSep = decSep;
+    newFormat.precision = precisionList.getSelectedId();
+
+    extractor.setCsvFormat(newFormat);
+}
+
 void MainComponent::updateInterfaceState() {
     const bool shouldBeEnabled = extractor.canEditSettings();
 
@@ -241,6 +327,11 @@ void MainComponent::updateInterfaceState() {
     rateSlider.setEnabled(shouldBeEnabled);
     csvPathButton.setEnabled(shouldBeEnabled);
     extractor.getAudioPlayer().setInteractionEnabled(shouldBeEnabled);
+
+    exportModeList.setEnabled(shouldBeEnabled);
+    sepEditor.setEnabled(shouldBeEnabled);
+    decSepEditor.setEnabled(shouldBeEnabled);
+    precisionList.setEnabled(shouldBeEnabled);
 }
 
 std::vector<Feature*> MainComponent::getActiveFeatures() {
@@ -379,6 +470,28 @@ void MainComponent::resized() {
 
     csvNameEditor.setBounds(csvCol.removeFromTop(26));
     oscPortEditor.setBounds(oscCol.removeFromTop(26));
+
+    // new
+
+    csvCol.removeFromTop(10);
+
+    auto exportArea = csvCol.removeFromTop(26);
+    exportLabel.setBounds(exportArea.removeFromLeft(50));
+    exportModeList.setBounds(exportArea);
+
+    csvCol.removeFromTop(6);
+
+    auto fmtLabels = csvCol.removeFromTop(18);
+    auto fmtBoxes = csvCol.removeFromTop(26);
+    const int fmtW = fmtBoxes.getWidth() / 3;
+    sepLabel.setBounds(fmtLabels.removeFromLeft(fmtW));
+    decSepLabel.setBounds(fmtLabels.removeFromLeft(fmtW));
+    precisionLabel.setBounds(fmtLabels);
+    sepEditor.setBounds(fmtBoxes.removeFromLeft(fmtW).reduced(1, 0));
+    decSepEditor.setBounds(fmtBoxes.removeFromLeft(fmtW).reduced(1, 0));
+    precisionList.setBounds(fmtBoxes.reduced(1, 0));
+
+
 
     rateCol.removeFromTop(0);
     rateSlider.setBounds(rateCol.removeFromTop(70).withSizeKeepingCentre(70, 70));

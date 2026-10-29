@@ -153,16 +153,26 @@ void MyFeatureExtractor::run() {
     auto startTime = Time::getMillisecondCounterHiRes();
     bool processCancelled = false;
 
-    CsvAggregateSink aggSink(File(csvPath).getChildFile(csvFileName + ".csv"), activeFunctionals);
-    CsvFrameSink frameSink(File(csvPath).getChildFile(csvFileName + "_frames.csv"));
+    std::unique_ptr<CsvAggregateSink> aggSink;
+    std::unique_ptr<CsvFrameSink> frameSink;
 
-    bool outputFail = (aggSink.isNull() || frameSink.isNull());
+    const auto mode = exportMode;
+
+    if (mode != Export::Frame) {
+        aggSink = std::make_unique<CsvAggregateSink>(File(csvPath).getChildFile(csvFileName + ".csv"), activeFunctionals, csvFormat);
+    }
+
+    if (mode != Export::Aggregate) {
+        frameSink = std::make_unique<CsvFrameSink>(File(csvPath).getChildFile(csvFileName + "_frames.csv"), csvFormat);
+    }
+
+    bool outputFail = (aggSink && aggSink->isNull()) || (frameSink && frameSink->isNull());
 
     if (!outputFail) {
 
         BatchSink sink;
-        sink.add(&aggSink);
-        sink.add(&frameSink);
+        sink.add(aggSink.get());
+        sink.add(frameSink.get());
 
         sink.begin(buildSchema());
 

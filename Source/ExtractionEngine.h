@@ -6,6 +6,7 @@
 #include "AudioPlayer.h"
 
 #include "MidiOscSink.h"
+#include "CsvFormat.h"
 
 class MyFeatureExtractor : public ThreadWithProgressWindow {
 public:
@@ -26,6 +27,8 @@ public:
 		csvFileName = File::createLegalFileName(newName);
 	}
 	String getCsvFileName() const { return csvFileName; }
+	void setCsvFormat(const CsvFormat& newFormat) { csvFormat = newFormat; }
+	void setExport(const Export& newExportMode) { exportMode = newExportMode; }
 
 	//osc
 	void setOscIP(String ip) { oscIP = ip; }
@@ -68,6 +71,8 @@ private:
 	//csv
 	String csvPath;
 	String csvFileName = "Feature_analysis";
+	CsvFormat csvFormat;
+	Export exportMode;
 
 	//midi
 	StringArray midiOutputNames;

@@ -6,3 +6,9 @@ struct CsvFormat {
 	juce::String decimalSep = ",";
 	int precision = 4;
 };
+
+enum class Export {
+	Aggregate,
+	Frame,
+	Both
+};

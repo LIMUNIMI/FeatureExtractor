@@ -5,6 +5,9 @@
 #include "ExtractionEngine.h"
 #include "MyTheme.h"
 
+#include "CsvFormat.h"
+
+
 class MainComponent  : public AudioAppComponent {
 public:
     MainComponent();
@@ -69,6 +72,17 @@ private:
     TextButton csvPathButton;
     void pathButtonClicked();
     std::unique_ptr<FileChooser> chooser;
+
+    Label exportLabel;
+    Label sepLabel; 
+    Label decSepLabel;
+    Label precisionLabel;
+    ComboBox exportModeList, precisionList;
+
+    TextEditor sepEditor, decSepEditor;
+    void updateBatch();
+
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
