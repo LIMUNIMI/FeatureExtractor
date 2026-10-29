@@ -83,6 +83,7 @@ MainComponent::MainComponent() {
     rateSlider.setRange(5.0, 50.0, 1.0);
     rateSlider.setTextValueSuffix(" Hz");
     rateSlider.onValueChange = [this] {extractor.setUpdateRate(rateSlider.getValue()); };
+    rateSlider.setValue(20.0);
 
     addAndMakeVisible(rateLabel);
     rateLabel.setText("Message Rate", juce::dontSendNotification);
@@ -90,11 +91,11 @@ MainComponent::MainComponent() {
     rateLabel.setJustificationType(juce::Justification::centredLeft);
 
     extractor.getAudioPlayer().onLiveModeToggled = [this](bool isLive) {
-        extractor.setLiveMode(isLive);
         if (isLive) {
             extractor.setActiveFeatures(getActiveFeatures());
             extractor.prepareLiveFeatures();
         }
+        extractor.setLiveMode(isLive); ///
         if (extractor.onStateChanged) extractor.onStateChanged();
         };
 
