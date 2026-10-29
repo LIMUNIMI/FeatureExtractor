@@ -187,6 +187,9 @@ bool AudioPlayer::isPlaying() const { return state == Starting || state == Playi
 
 void AudioPlayer::changeState(TransportState newState) {
     if (state != newState) {
+        if (newState == Starting && onPlaybackStarted != nullptr && readerSource != nullptr)
+            onPlaybackStarted(sampleRate, blockSize);     
+
         state = newState;
         switch (state) {
         case Stopped:
@@ -196,9 +199,6 @@ void AudioPlayer::changeState(TransportState newState) {
             if (onPlaybackStopped != nullptr) { onPlaybackStopped(); }
             break;
         case Starting:
-            if (onPlaybackStarted != nullptr && readerSource != nullptr) {
-                onPlaybackStarted(sampleRate, blockSize);
-            }
             playButton.setEnabled(false);
             transportSource.start();
             break;
@@ -214,7 +214,7 @@ void AudioPlayer::changeState(TransportState newState) {
 
 void AudioPlayer::setInteractionEnabled(bool shouldBeEnabled) {
     if (folderTabBtn.getToggleState()) {
-        fileListBox.setEnabled(shouldBeEnabled);
+        fileListBox.setEnabled(shouldBeEnabled || isPlaying());
         processButton.setEnabled(shouldBeEnabled && !currentFileList.empty());
         playButton.setEnabled(shouldBeEnabled && readerSource != nullptr);
     }
